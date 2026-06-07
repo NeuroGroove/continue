@@ -5,6 +5,8 @@ import { saveCurrentSession } from "../../redux/thunks/session";
 import { useCompactConversation } from "../../util/compactConversation";
 import { ToolTip } from "../gui/Tooltip";
 
+const PATCH_MODE_WARNING_THRESHOLD_CHARS = 24000;
+
 function formatApproxChars(charCount: number): string {
   if (charCount < 1000) {
     return `${charCount}`;
@@ -35,6 +37,16 @@ const ContextStatus = () => {
   const isPruned = useAppSelector((state) => state.session.isPruned);
   const showContextPayloadInfo =
     typeof window !== "undefined" && window.showContextPayloadInfo === true;
+  const contextMode =
+    typeof window !== "undefined" &&
+    (window.contextMode === "standard" ||
+      window.contextMode === "patch" ||
+      window.contextMode === "research")
+      ? window.contextMode
+      : "standard";
+  const shouldShowPatchModeWarning =
+    contextMode !== "patch" &&
+    contextPayloadEstimateChars > PATCH_MODE_WARNING_THRESHOLD_CHARS;
 
   const isDifferentModelAndSameHistory = useMemo(() => {
     if (!selectedChatModel) return false;
@@ -50,7 +62,11 @@ const ContextStatus = () => {
   const compactConversation = useCompactConversation();
   const shouldShowContextStatus = isPruned || percent >= 60;
 
-  if (!shouldShowContextStatus && !showContextPayloadInfo) {
+  if (
+    !shouldShowContextStatus &&
+    !showContextPayloadInfo &&
+    !shouldShowPatchModeWarning
+  ) {
     return null;
   }
 
@@ -126,6 +142,11 @@ const ContextStatus = () => {
       {showContextPayloadInfo && (
         <span className="text-description-muted whitespace-nowrap text-[10px] leading-none">
           {`payload ${payloadEstimateText}`}
+        </span>
+      )}
+      {shouldShowPatchModeWarning && (
+        <span className="text-warning whitespace-nowrap text-[10px] leading-none">
+          Context high — switch to Patch Mode to reduce lag.
         </span>
       )}
     </div>
