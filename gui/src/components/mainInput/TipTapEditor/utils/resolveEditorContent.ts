@@ -39,6 +39,21 @@ interface ResolveEditorContentOutput {
     | undefined;
 }
 
+type ContextMode = "standard" | "patch" | "research";
+
+function getContextMode(): ContextMode {
+  if (typeof window === "undefined") {
+    return "standard";
+  }
+
+  const mode = window.contextMode;
+  if (mode === "standard" || mode === "patch" || mode === "research") {
+    return mode;
+  }
+
+  return "standard";
+}
+
 /**
  * This function converts the input from the editor to a string, resolving any context items
  * Context items are appended to the top of the prompt and then referenced within the input
@@ -52,6 +67,10 @@ export async function resolveEditorContent({
   dispatch,
   getState,
 }: ResolveEditorContentInput): Promise<ResolveEditorContentOutput> {
+  const contextMode = getContextMode();
+  const effectiveDefaultContextProviders =
+    contextMode === "patch" ? [] : defaultContextProviders;
+
   const {
     parts,
     contextRequests: editorContextRequests,
@@ -74,7 +93,7 @@ export async function resolveEditorContent({
   const contextRequests = [...editorContextRequests, ...slashContextRequests];
 
   const shouldGatherContext =
-    defaultContextProviders.length > 0 ||
+    effectiveDefaultContextProviders.length > 0 ||
     modifiers.useCodebase ||
     !modifiers.noContext ||
     contextRequests.length > 0;
@@ -87,7 +106,7 @@ export async function resolveEditorContent({
     contextRequests,
     modifiers,
     ideMessenger,
-    defaultContextProviders,
+    defaultContextProviders: effectiveDefaultContextProviders,
     parts: slashedParts,
     selectedCode,
     getState,

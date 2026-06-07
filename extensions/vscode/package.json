@@ -138,6 +138,16 @@
           "default": false,
           "description": "Shows developer/debug information about chat context payload estimates."
         },
+        "continue.contextMode": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "patch",
+            "research"
+          ],
+          "default": "standard",
+          "description": "Controls how much context Continue automatically gathers for chat requests."
+        },
         "continue.remoteConfigServerUrl": {
           "type": "string",
           "default": null,

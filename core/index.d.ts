@@ -27,6 +27,7 @@ declare global {
     colorThemeName?: string;
     workspacePaths?: string[];
     showContextPayloadInfo?: boolean;
+    contextMode?: "standard" | "patch" | "research";
     postIntellijMessage?: (
       messageType: string,
       data: any,
@@ -97,8 +98,7 @@ type RequiredLLMOptions =
   | "completionOptions";
 
 export interface ILLM
-  extends
-    Omit<LLMOptions, RequiredLLMOptions>,
+  extends Omit<LLMOptions, RequiredLLMOptions>,
     Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
   get underlyingProviderName(): string;

@@ -85,6 +85,16 @@ export class ContinueGUIWebviewViewProvider
       vscode.workspace
         .getConfiguration(EXTENSION_NAME)
         .get<boolean>("showContextPayloadInfo") ?? false;
+    const configuredContextMode =
+      vscode.workspace
+        .getConfiguration(EXTENSION_NAME)
+        .get<string>("contextMode") ?? "standard";
+    const contextMode =
+      configuredContextMode === "patch" ||
+      configuredContextMode === "research" ||
+      configuredContextMode === "standard"
+        ? configuredContextMode
+        : "standard";
     if (inDevelopmentMode) {
       scriptUri = "http://localhost:5173/src/main.tsx";
       styleMainUri = "http://localhost:5173/src/index.css";
@@ -170,6 +180,7 @@ export class ContinueGUIWebviewViewProvider
         <script>window.showContextPayloadInfo = ${JSON.stringify(
           showContextPayloadInfo,
         )}</script>
+        <script>window.contextMode = ${JSON.stringify(contextMode)}</script>
         <script>window.colorThemeName = "dark-plus"</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map((folder) =>
