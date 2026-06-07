@@ -8,10 +8,13 @@ class Deepseek extends OpenAI {
   static providerName = "deepseek";
   protected supportsReasoningField = false;
   protected supportsReasoningDetailsField = false;
-  protected supportsReasoningContentField = true;
+  // DeepSeek returns `reasoning_content` in responses, but their API rejects it
+  // when it is replayed in later request messages. Keep parsing support in the
+  // shared OpenAI converter, but do not send `reasoning_content` back upstream.
+  protected supportsReasoningContentField = false;
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.deepseek.com/",
-    model: "deepseek-coder",
+    apiBase: "https://api.deepseek.com",
+    model: "deepseek-v4-flash",
     promptTemplates: {
       edit: osModelsEditPrompt,
     },
