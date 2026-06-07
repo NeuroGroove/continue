@@ -1,9 +1,15 @@
-import { ChatMessage } from "core";
+import { ChatMessage, ContextItemWithId } from "core";
 import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4 } from "uuid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
-import { ChatHistoryItemWithMessageId, sessionSlice } from "./sessionSlice";
+import type { RootState } from "../store";
+import {
+  ChatHistoryItemWithMessageId,
+  getContextPayloadEstimateChars,
+  selectContextPayloadEstimateChars,
+  sessionSlice,
+} from "./sessionSlice";
 
 // Mock dependencies
 vi.mock("uuid");
@@ -13,6 +19,76 @@ vi.mock("../../util/toolCallState");
 const mockUuidv4 = vi.mocked(uuidv4);
 const mockRenderChatMessage = vi.mocked(renderChatMessage);
 const mockAddToolCallDeltaToState = vi.mocked(addToolCallDeltaToState);
+
+function makeContextItem(content: string): ContextItemWithId {
+  return {
+    content,
+    name: `${content}-name`,
+    description: `${content}-description`,
+    id: {
+      providerTitle: "codebase",
+      itemId: `${content}-id`,
+    },
+  };
+}
+
+describe("Context Payload Estimate", () => {
+  it("uses the latest user message context items", () => {
+    const history: ChatHistoryItemWithMessageId[] = [
+      {
+        message: {
+          role: "user",
+          content: "old",
+          id: "old-user",
+        },
+        contextItems: [makeContextItem("old-context")],
+      },
+      {
+        message: {
+          role: "assistant",
+          content: "reply",
+          id: "assistant",
+        },
+        contextItems: [],
+      },
+      {
+        message: {
+          role: "user",
+          content: "current",
+          id: "current-user",
+        },
+        contextItems: [makeContextItem("alpha"), makeContextItem("beta")],
+      },
+    ];
+
+    expect(getContextPayloadEstimateChars(history)).toBe(
+      "current".length + "alpha\n\nbeta".length,
+    );
+  });
+
+  it("exposes the estimate through the selector", () => {
+    const history: ChatHistoryItemWithMessageId[] = [
+      {
+        message: {
+          role: "user",
+          content: "current",
+          id: "current-user",
+        },
+        contextItems: [makeContextItem("payload")],
+      },
+    ];
+
+    const rootState = {
+      session: {
+        history,
+      },
+    } as RootState;
+
+    expect(selectContextPayloadEstimateChars(rootState)).toBe(
+      "current".length + "payload".length,
+    );
+  });
+});
 
 describe("sessionSlice streamUpdate", () => {
   beforeEach(() => {

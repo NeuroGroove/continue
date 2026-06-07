@@ -201,6 +201,28 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
 
+export function getContextPayloadEstimateChars(
+  history: ChatHistoryItemWithMessageId[],
+): number {
+  const lastUserIndex = findLastIndex(
+    history,
+    (item) => item.message.role === "user",
+  );
+
+  if (lastUserIndex === -1) {
+    return 0;
+  }
+
+  const userMessageChars = renderChatMessage(
+    history[lastUserIndex].message,
+  ).length;
+  const contextItems = history[lastUserIndex].contextItems ?? [];
+
+  return contextItems.reduce((totalChars, item, index) => {
+    return totalChars + item.content.length + (index > 0 ? 2 : 0);
+  }, userMessageChars);
+}
+
 type SessionState = {
   lastSessionId?: string;
   isSessionMetadataLoading: boolean;
@@ -1010,6 +1032,9 @@ export const sessionSlice = createSlice({
       const curHistoryItem = state.history.at(-1);
       return curHistoryItem?.isGatheringContext || false;
     },
+    selectContextPayloadEstimateChars: (state) => {
+      return getContextPayloadEstimateChars(state.history);
+    },
   },
   extraReducers: (builder) => {
     addPassthroughCases(builder, [streamResponseThunk]);
@@ -1095,6 +1120,7 @@ export const {
   setCompactionLoading,
 } = sessionSlice.actions;
 
-export const { selectIsGatheringContext } = sessionSlice.selectors;
+export const { selectIsGatheringContext, selectContextPayloadEstimateChars } =
+  sessionSlice.selectors;
 
 export default sessionSlice.reducer;

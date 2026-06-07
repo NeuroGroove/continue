@@ -133,6 +133,11 @@
           "default": false,
           "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
         },
+        "continue.showContextPayloadInfo": {
+          "type": "boolean",
+          "default": false,
+          "description": "Shows developer/debug information about chat context payload estimates."
+        },
         "continue.remoteConfigServerUrl": {
           "type": "string",
           "default": null,

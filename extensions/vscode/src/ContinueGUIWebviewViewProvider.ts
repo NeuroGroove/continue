@@ -1,3 +1,4 @@
+import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
 
 import { getTheme } from "./util/getTheme";
@@ -51,7 +52,7 @@ export class ContinueGUIWebviewViewProvider
   }
 
   sendMainUserInput(input: string) {
-    this.webview?.postMessage({
+    void this.webview?.postMessage({
       type: "userInput",
       input,
     });
@@ -80,6 +81,10 @@ export class ContinueGUIWebviewViewProvider
 
     const inDevelopmentMode =
       context?.extensionMode === vscode.ExtensionMode.Development;
+    const showContextPayloadInfo =
+      vscode.workspace
+        .getConfiguration(EXTENSION_NAME)
+        .get<boolean>("showContextPayloadInfo") ?? false;
     if (inDevelopmentMode) {
       scriptUri = "http://localhost:5173/src/main.tsx";
       styleMainUri = "http://localhost:5173/src/index.css";
@@ -162,6 +167,9 @@ export class ContinueGUIWebviewViewProvider
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
         <script>window.ide = "vscode"</script>
         <script>window.fullColorTheme = ${JSON.stringify(currentTheme)}</script>
+        <script>window.showContextPayloadInfo = ${JSON.stringify(
+          showContextPayloadInfo,
+        )}</script>
         <script>window.colorThemeName = "dark-plus"</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map((folder) =>
